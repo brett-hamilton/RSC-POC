@@ -53,7 +53,7 @@ public class RSCTerrainMesh : MonoBehaviour
         return t;
     }
 
-    void GenerateMesh()
+    public void GenerateMesh()
     {
         Mesh mesh = new Mesh();
         mesh.name = "RSC Terrain";
@@ -104,5 +104,24 @@ public class RSCTerrainMesh : MonoBehaviour
         mesh.normals = normals;
 
         GetComponent<MeshFilter>().mesh = mesh;
+
+        // keep the collider in sync with the generated mesh so painting/raycasts work
+        MeshCollider meshCollider = GetComponent<MeshCollider>();
+        if (meshCollider == null) meshCollider = gameObject.AddComponent<MeshCollider>();
+        meshCollider.sharedMesh = null;      // force Unity to refresh it
+        meshCollider.sharedMesh = mesh;
+    }
+
+    public void SetTileType(int x, int z, TileType type)
+    {
+        if (x < 0 || x >= width || z < 0 || z >= depth) return;
+        tileTypes[x, z] = type;
+        GenerateMesh(); // rebuild immediately so you see the paint update
+    }
+
+    public void EnsureInitialized()
+    {
+        if (heights == null) heights = GenerateSampleHeights();
+        if (tileTypes == null) tileTypes = GenerateSampleTypes();
     }
 }
